@@ -24,9 +24,9 @@ PUB = ['sex',
        'disability',
        'englishability']
 
-ROUNDING = 2 ** 1
-NOISE_ADDITION = 2 ** 2
-SUBSAMPLING = 2 ** 3
+ROUNDING = 1
+NOISE_ADDITION = 2
+SUBSAMPLING = 3
 
 P = 961845637
 
@@ -72,11 +72,11 @@ def subsampling(data, predicate, t):
     return result * scale_factor
 
 def query(data, predicate, defense=0, defense_factor=0.):
-    if (defense & SUBSAMPLING):
+    if (defense == SUBSAMPLING):
         return subsampling(data, predicate, defense_factor)
-    elif (defense & NOISE_ADDITION):
+    elif (defense == NOISE_ADDITION):
         return noise_addition(data, predicate, defense_factor)
-    elif (defense & ROUNDING):
+    elif (defense == ROUNDING):
         return rounding(data, predicate, defense_factor)
     else:
         return get_query(data, predicate)
