@@ -10,6 +10,7 @@ import numpy as np
 from scipy import stats
 import math
 import csv
+import progressbar
 
 PUB = ['sex',
        'age',
@@ -30,8 +31,6 @@ NOISE_ADDITION = 2
 SUBSAMPLING = 3
 
 P = 961845637
-
-n = 100
 
 def read_csv(file):
     with open(file, 'rU') as csv_file:
@@ -80,12 +79,12 @@ def subsampling(data, predicate, t):
     scale_factor = float(len(data)) / float(t)
     return result * scale_factor, x
 
-def query(data, predicate, defense=0, defense_factor=0.):
-    if (defense == SUBSAMPLING):
+def query(data, predicate, defense_type=0, defense_factor=0.):
+    if (defense_type == SUBSAMPLING):
         return subsampling(data, predicate, defense_factor)
-    elif (defense == NOISE_ADDITION):
+    elif (defense_type == NOISE_ADDITION):
         return noise_addition(data, predicate, defense_factor)
-    elif (defense == ROUNDING):
+    elif (defense_type == ROUNDING):
         return rounding(data, predicate, defense_factor)
     else:
         return get_query(data, predicate)
@@ -96,31 +95,77 @@ def random_predicate(row):
         sum += np.random.randint(P) * row[pub_key]
     return (sum % P) % 2 == 1
 
-def main():
-    data = read_csv('FultonPUMS5.csv')
-    total_predicate = lambda row: True
-    false_predicate = lambda row: False
+def experiment(data, n, defense_type, defense_factor):
+    true_predicate = lambda row: True
 
-
-
-    #print(query(data, total_predicate), query(data, total_predicate, NOISE_ADDITION, 1))
-    #print(query(data, random_predicate), query(data, random_predicate, NOISE_ADDITION, 1))
-    for i in range(1005):
-        y, x = query(data, random_predicate)
+    experiment_bar = progressbar.ProgressBar(maxval=10*n, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    experiment_bar.start()
+    for i in range(10*n):
+        experiment_bar.update(i)
+        y, x = query(data, true_predicate, defense_type, defense_factor)
         if i == 0:
             Ys, Xs = y, x
         else:
             Ys, Xs = np.vstack((Ys, y)), np.vstack((Xs, x))
-
-    
+    experiment_bar.finish()
 
     Betas, residuals, ranks, s = np.linalg.lstsq(Xs, Ys)
 
-    print(Betas)
+    successes = 0
+    false_positives = 0
+    false_negatives = 0
+    total_squared_error = 0.
+    for index, estimate in enumerate(Betas):
+        total_squared_error += (estimate - float(data[index]['uscitizen'])) ** 2.
+        if estimate >= 0.5:
+            if data[index]['uscitizen']:
+                successes += 1
+            else:
+                false_positives += 1
+        else:
+            if data[index]['uscitizen']:
+                false_negatives += 1
+            else:
+                successes += 1
 
-    print(Xs.shape)
-    print(Ys.shape)
-    print(len(Betas))
+    success_rate = float(successes) / float(len(data))
+    mse = total_squared_error / float(n)
+    root_mse = math.sqrt(mse)
+
+    output = [defense_type,
+              defense_factor,
+              successes,
+              false_positives,
+              false_negatives,
+              success_rate,
+              root_mse]
+
+    return output
+
+def main():
+    data = read_csv('FultonPUMS5.csv')
+    n = len(data)
+
+    with open('testing.csv', 'wb') as out_csv:
+        writer = csv.writer(out_csv)
+        writer.writerow(['defense_type',
+                         'defense_factor',
+                         'successes',
+                         'false_positives',
+                         'false_negatives',
+                         'success_rate',
+                         'root_mse'])
+
+        for defense_type in range(1, 4):
+            for defense_factor in np.linspace(1, n, 50):
+                defense_factor = int(defense_factor)
+                print("defense_type: " + str(defense_type) + " with defense_factor " + str(defense_factor))
+                average = np.zeros(7)
+                for i in range(10):
+                    print("Trial " + str(i+1) + " of 10")
+                    average += experiment(data, n, defense_type, defense_factor)
+                average /= 10
+                writer.writerow(average)
 
 if __name__ == "__main__":
     main()
