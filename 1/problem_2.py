@@ -7,6 +7,7 @@ Homework 1, Problem 2
 """
 
 import numpy as np
+from scipy import stats
 import math
 import csv
 
@@ -30,6 +31,8 @@ SUBSAMPLING = 3
 
 P = 961845637
 
+n = 100
+
 def read_csv(file):
     with open(file, 'rU') as csv_file:
         reader = csv.DictReader(csv_file)
@@ -46,30 +49,36 @@ def read_csv(file):
 
 def get_query(data, predicate):
     result = 0.
-    for row in data:
+    x = np.zeros(len(data))
+    for idx, row in enumerate(data):
         if predicate(row):
             result += row['uscitizen']
-    return result
+            x[idx] = 1.
+    return result, x
 
 def rounding(data, predicate, R):
-    result = get_query(data, predicate)
+    result, x = get_query(data, predicate)
     modulo = result % R
     if (modulo < R/2):
-        return result - modulo
+        return result - modulo, x
     else:
-        return result + (R - modulo)
+        return result + (R - modulo), x
 
 def noise_addition(data, predicate, sigma):
-    return get_query(data, predicate) + np.random.normal(scale=sigma)
+    result, x = get_query(data, predicate)
+    result = result + np.random.normal(scale=sigma)
+    return result, x
 
 def subsampling(data, predicate, t):
     subsample_indices = np.random.choice(len(data), size=t, replace=False)
     subsample = []
+    x = np.zeros(len(data))
     for index in subsample_indices:
         subsample.append(data[index])
-    result = get_query(subsample, predicate)
+        x[index] = 1.
+    result, _ = get_query(subsample, predicate)
     scale_factor = float(len(data)) / float(t)
-    return result * scale_factor
+    return result * scale_factor, x
 
 def query(data, predicate, defense=0, defense_factor=0.):
     if (defense == SUBSAMPLING):
@@ -90,9 +99,28 @@ def random_predicate(row):
 def main():
     data = read_csv('FultonPUMS5.csv')
     total_predicate = lambda row: True
+    false_predicate = lambda row: False
 
-    print(query(data, total_predicate), query(data, total_predicate, NOISE_ADDITION, 1))
-    print(query(data, random_predicate), query(data, random_predicate, NOISE_ADDITION, 1))
+
+
+    #print(query(data, total_predicate), query(data, total_predicate, NOISE_ADDITION, 1))
+    #print(query(data, random_predicate), query(data, random_predicate, NOISE_ADDITION, 1))
+    for i in range(1005):
+        y, x = query(data, random_predicate)
+        if i == 0:
+            Ys, Xs = y, x
+        else:
+            Ys, Xs = np.vstack((Ys, y)), np.vstack((Xs, x))
+
+    
+
+    Betas, residuals, ranks, s = np.linalg.lstsq(Xs, Ys)
+
+    print(Betas)
+
+    print(Xs.shape)
+    print(Ys.shape)
+    print(len(Betas))
 
 if __name__ == "__main__":
     main()
