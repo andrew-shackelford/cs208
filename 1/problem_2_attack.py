@@ -55,6 +55,16 @@ def get_query(data, predicate):
             x[idx] = 1.
     return result, x
 
+def get_subsampled_query(data, predicate, subsample_indices):
+    result = 0.
+    x = np.zeros(len(data))
+    for idx, row in enumerate(data):
+        if predicate(row):
+            x[idx] = 1.
+            if idx in subsample_indices:
+                result += row['uscitizen']
+    return result, x
+
 def rounding(data, predicate, R):
     result, x = get_query(data, predicate)
     modulo = result % R
@@ -69,13 +79,8 @@ def noise_addition(data, predicate, sigma):
     return result, x
 
 def subsampling(data, predicate, t):
-    subsample_indices = np.random.choice(len(data), size=t, replace=False)
-    subsample = []
-    x = np.zeros(len(data))
-    for index in subsample_indices:
-        subsample.append(data[index])
-        x[index] = 1.
-    result, _ = get_query(subsample, predicate)
+    subsample_indices = set(np.random.choice(len(data), size=t, replace=False))
+    result, x = get_subsampled_query(data, predicate, subsample_indices)
     scale_factor = float(len(data)) / float(t)
     return result * scale_factor, x
 
@@ -96,13 +101,11 @@ def random_predicate(row):
     return (sum % P) % 2 == 1
 
 def experiment(data, n, defense_type, defense_factor):
-    true_predicate = lambda row: True
-
-    experiment_bar = progressbar.ProgressBar(maxval=10*n, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
+    experiment_bar = progressbar.ProgressBar(maxval=2*n, widgets=[progressbar.Bar('=', '[', ']'), ' ', progressbar.Percentage()])
     experiment_bar.start()
-    for i in range(10*n):
+    for i in range(2*n):
         experiment_bar.update(i)
-        y, x = query(data, true_predicate, defense_type, defense_factor)
+        y, x = query(data, random_predicate, defense_type, defense_factor)
         if i == 0:
             Ys, Xs = y, x
         else:
@@ -143,10 +146,10 @@ def experiment(data, n, defense_type, defense_factor):
     return output
 
 def main():
-    data = read_csv('FultonPUMS5.csv')
+    data = read_csv('FultonPUMS5sample100.csv')
     n = len(data)
 
-    with open('testing.csv', 'wb') as out_csv:
+    with open('problem_2_results.csv', 'wb') as out_csv:
         writer = csv.writer(out_csv)
         writer.writerow(['defense_type',
                          'defense_factor',
@@ -157,7 +160,7 @@ def main():
                          'root_mse'])
 
         for defense_type in range(1, 4):
-            for defense_factor in np.linspace(1, n, 50):
+            for defense_factor in range(1, n+1):
                 defense_factor = int(defense_factor)
                 print("defense_type: " + str(defense_type) + " with defense_factor " + str(defense_factor))
                 average = np.zeros(7)
