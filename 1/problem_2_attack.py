@@ -30,7 +30,7 @@ ROUNDING = 1
 NOISE_ADDITION = 2
 SUBSAMPLING = 3
 
-P = 961845637
+P = 773
 
 def read_csv(file):
     with open(file, 'rU') as csv_file:
@@ -94,10 +94,17 @@ def query(data, predicate, defense_type=0, defense_factor=0.):
     else:
         return get_query(data, predicate)
 
+def gen_random_vector(length):
+    global random_vector
+    random_vector = []
+    for i in range(length):
+        random_vector.append(np.random.randint(P))
+
 def random_predicate(row):
+    global random_vector
     sum = 0
-    for pub_key in PUB:
-        sum += np.random.randint(P) * row[pub_key]
+    for idx, pub_key in enumerate(PUB):
+        sum += random_vector[idx] * row[pub_key]
     return (sum % P) % 2 == 1
 
 def experiment(data, n, defense_type, defense_factor):
@@ -105,6 +112,7 @@ def experiment(data, n, defense_type, defense_factor):
     experiment_bar.start()
     for i in range(2*n):
         experiment_bar.update(i)
+        gen_random_vector(len(PUB))
         y, x = query(data, random_predicate, defense_type, defense_factor)
         if i == 0:
             Ys, Xs = y, x
