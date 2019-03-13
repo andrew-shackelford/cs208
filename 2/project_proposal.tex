@@ -1,0 +1,91 @@
+\documentclass[12pt]{article}
+
+\usepackage{url}
+\usepackage{fullpage}
+\usepackage{amssymb,amsfonts}
+\usepackage{amsmath}
+\newcommand{\eps}{\varepsilon}
+\newcommand{\R}{\mathbb{R}}
+
+\usepackage{listings}
+\usepackage{color}
+\usepackage{graphicx}
+
+\usepackage{varwidth}
+
+\usepackage{hyperref}
+\hypersetup{
+    linktoc=all,     %set to all if you want both sections and subsections linked
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,      
+    urlcolor=cyan,
+}
+
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\lstset{frame=tb,
+  language=Python,
+  aboveskip=3mm,
+  belowskip=3mm,
+  showstringspaces=false,
+  columns=flexible,
+  basicstyle={\small\ttfamily},
+  numbers=none,
+  numberstyle=\tiny\color{gray},
+  keywordstyle=\color{blue},
+  commentstyle=\color{dkgreen},
+  stringstyle=\color{mauve},
+  breaklines=true,
+  breakatwhitespace=true,
+  tabsize=3
+}
+
+\usepackage[toc,page]{appendix}
+
+\DeclareMathOperator*{\E}{\mathbb{E}}
+\let\Pr\relax
+\DeclareMathOperator*{\Pr}{\mathbb{P}}
+
+\DeclareMathOperator*{\Lap}{\text{Lap}}
+
+\DeclareMathOperator*{\Geo}{\text{Geo}}
+
+\def\cl{\lstinline}
+
+\title{CS 208 Project Proposal:\\ A Differentially Private Query System}
+\author{Andrew Shackelford and Peter Chang}
+\date{March 13, 2019}
+\setcounter{tocdepth}{3}
+
+\begin{document}
+
+\maketitle
+
+We plan to work on creating a differentially private query system for use by other data analysts. However, rather than start from scratch, we plan to work with current systems like \href{https://github.com/ektelo}{Ektelo} or \href{https://www.microsoft.com/en-us/research/project/privacy-integrated-queries-pinq/}{PinQ}, and extend them to new use cases that would be relevant for the Harvard community.
+
+\medskip
+
+Differential privacy is a difficult concept to understand, let alone implement. As a result, we aim to create a system that abstracts away the difficult and hard-to-comprehend privacy mechanisms so that data analysts can focus their energy on the analysis itself. More importantly, using a robust differentially private query system will ensure that privacy is never compromised, as our system will not allow analysts to accidentally perform queries that might violate privacy.
+
+\medskip
+
+We will then test our data privacy system on different databases, both Harvard-affiliated and non-Harvard affiliated. We plan to use both the \href{https://github.com/privacytoolsproject/cs208/blob/master/data/FultonPUMS5full.csv}{US Census sample} we used in the first problem set, as well as a \href{http://dx.doi.org/10.2139/ssrn.2381263}{dataset from Harvard's edX program}. We may also consider other datasets that pose interesting problems we aim to tackle.
+
+\bigskip
+
+We plan to study the following works as the starting point for our project.
+\begin{itemize}
+    \item Zhang et al: \href{https://dl.acm.org/citation.cfm?doid=3183713.3196921}{\textit{Ektelo: A framework for defining differentially-private computations}} (2018)
+    
+    \item Kotsogiannis et al: \href{http://cidrdb.org/cidr2019/papers/p125-kotsogiannis-cidr19.pdf}{\textit{Architecting a differentially private SQL engine}} (2019) 
+    
+    \item Gaboardi et al: \href{https://arxiv.org/abs/1609.04340}{\textit{Psi ($\Psi$): a private data sharing interface}} (2016)
+    
+\end{itemize}
+
+Although we anticipate learning more about this in Friday's practicum, as well as researching it ourselves, we seek advice from the instructors on what current differentially private query systems lack. Only by understanding what data analysts want from their querying systems will we be able to architect our improvements to current frameworks.
+
+\end{document}
