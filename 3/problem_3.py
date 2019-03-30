@@ -74,12 +74,6 @@ def write_mse_csv(results, file):
         for row in results:
             writer.writerow(row)
 
-def get_variable_data(data, variable):
-    ret = []
-    for row in data:
-        ret.append(row[variable])
-    return ret
-
 def clip_data(data, variable, l, u):
     for row in data:
         if row[variable] < l:
@@ -123,7 +117,7 @@ def get_histogram(data, income, educ, age, epsilon):
         educ_idx = row['educ'] - 1
         age_idx = int(np.floor((row['age']-age_l) * num_age_bins / (age_u - age_l)))
 
-        # fix granularity
+        # fix granularity issues
         if row['income'] == income_u:
             income_idx = num_income_bins - 1
         if row['age'] == age_u:
@@ -136,34 +130,12 @@ def get_histogram(data, income, educ, age, epsilon):
         true_dct[(income_bound_l, income_bound_r, educ_bound_l, educ_bound_r, age_bound_l, age_bound_r)] = \
             true_dct.get((income_bound_l, income_bound_r, educ_bound_l, educ_bound_r, age_bound_l, age_bound_r), 0) + 1
 
-    true_results = []
-    dp_results = []
+    true_results, dp_results = [], []
 
     for key, val in true_dct.iteritems():
         true_results.append((key[0], key[1], key[2], key[3], key[4], key[5], val))
         dp_results.append((key[0], key[1], key[2], key[3], key[4], key[5], val + np.random.laplace(scale=scale)))
 
-
-    """
-    for income_idx in range(num_income_bins):
-        print ("Generating histogram for income_idx " + str(income_idx))
-        for educ_idx in range(num_educ_bins):
-            for age_idx in range(num_age_bins):
-                income_bound_l, income_bound_r = income_bins[income_idx], income_bins[income_idx+1]
-                educ_bound_l, educ_bound_r = educ_bins[educ_idx], educ_bins[educ_idx+1]
-                age_bound_l, age_bound_r = age_bins[age_idx], age_bins[age_idx+1]
-
-                count = 0
-                for row in data:
-                    if row.get('already_counted', False):
-                        continue
-                    if row['income'] >= income_bound_l and row['income'] < income_bound_r and row['educ'] >= educ_bound_l and row['educ'] < educ_bound_r and row['age'] >= age_bound_l and row['age'] < age_bound_r:
-                        count += 1
-                        row['already_counted'] = True
-
-                true_results.append((income_bound_l, income_bound_r, educ_bound_l, educ_bound_r, age_bound_l, age_bound_r, count))
-                dp_results.append((income_bound_l, income_bound_r, educ_bound_l, educ_bound_r, age_bound_l, age_bound_r, count + np.random.laplace(scale=scale)))
-    """
     return dp_results, true_results
 
 def generate_histograms():
@@ -266,7 +238,7 @@ def main():
 
     results = [['bootstrap', bootstrap_bias[0], bootstrap_bias[1], bootstrap_bias[2], bootstrap_variance[0], bootstrap_variance[1], bootstrap_variance[2]],
                ['synthetic', synthetic_bias[0], synthetic_bias[1], synthetic_bias[2], synthetic_variance[0], synthetic_variance[1], synthetic_variance[2]]]
-    write_mse_csv(results, 'results.csv')
+    write_mse_csv(results, 'problem_3_results.csv')
 
 if __name__ == "__main__":
     main()
