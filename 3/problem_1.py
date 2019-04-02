@@ -1,3 +1,11 @@
+"""
+Andrew Shackelford
+ashackelford@college.harvard.edu
+
+CS 208 - Spring 2019
+Homework 3, Problem 1
+"""
+
 import numpy as np
 from scipy.special import softmax as softmax
 import csv

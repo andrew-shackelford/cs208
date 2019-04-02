@@ -1,3 +1,9 @@
+# Andrew Shackelford
+# ashackelford@college.harvard.edu
+#
+# CS 208 - Spring 2019
+# Homework 3, Problem 2
+
 library("PSIlence")
 
 epsilonGlobal <- 1
